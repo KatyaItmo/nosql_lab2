@@ -1,39 +1,18 @@
 package com.fitness.nosql_lab1.objects;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Entity
-@Table(name = "products")
 public class Product {
 
-    @Id
-    @Column(nullable = false, unique = true)
+    @JsonProperty("_id")
     private String id;
 
-    @Column(nullable = false)
+    @JsonProperty("_rev")
+    private String rev;
+
     private String name;
-
-    @Column(nullable = false)
     private String description;
-
-    @Column(nullable = false)
     private int price;
-
-    public Product(String id, String name, String description, int price) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.price = price;
-    }
-
-    public Product(String name, String description, int price) {
-        this.name = name;
-        this.description = description;
-        this.price = price;
-    }
 
     public Product() {}
 
@@ -43,6 +22,14 @@ public class Product {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getRev() {
+        return rev;
+    }
+
+    public void setRev(String rev) {
+        this.rev = rev;
     }
 
     public String getName() {

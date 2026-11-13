@@ -1,18 +1,19 @@
 version: '3.8'
 
 services:
-  postgres-db:
-    image: postgres:15-alpine
-    container_name: postgres-db
+
+  couch-db:
+    image: couchdb:3.3
+    container_name: couch-db
     environment:
-      POSTGRES_USER: cheremsha
-      POSTGRES_PASSWORD: password67
-      POSTGRES_DB: postgres
+      - COUCHDB_USER=chermsha
+      - COUCHDB_PASSWORD=password67
     ports:
-      - "5432:5432"
+      - "5984:5984"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - couchdb-data:/opt/couch-db/data
     restart: unless-stopped
+
 
   etcd-db:
     image: gcr.io/etcd-development/etcd:v3.5.11
@@ -31,13 +32,13 @@ services:
       - "8080:8080"
     environment:
       - ETCD_ENDPOINTS=http://etcd-db:2379
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/postgres
-      - SPRING_DATASOURCE_USERNAME=cheremsha
-      - SPRING_DATASOURCE_PASSWORD=password67
+      - COUCHDB_URL=http://couchdb:5984
+      - COUCHDB_USER=cheremsha
+      - COUCHDB_PASSWORD=password67
     depends_on:
-      - postgres-db
+      - couch-db
       - etcd-db
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  couchdb-data:

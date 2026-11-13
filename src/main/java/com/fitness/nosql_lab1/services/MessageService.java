@@ -1,7 +1,6 @@
 package com.fitness.nosql_lab1.services;
 
 import com.fitness.nosql_lab1.dtos.MessageDto;
-import com.fitness.nosql_lab1.objects.Message;
 import com.fitness.nosql_lab1.objects.User;
 import com.fitness.nosql_lab1.repository.MessageRepository;
 import com.fitness.nosql_lab1.repository.UserRepository;

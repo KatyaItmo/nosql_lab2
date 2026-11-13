@@ -1,31 +1,40 @@
 package com.fitness.nosql_lab1.objects;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "users")
 public class User {
 
-    @Id
-    @Column(nullable = false, unique = true)
+    @JsonProperty("_id")
+    private String id;
+
+    @JsonProperty("_rev")
+    private String rev;
+
     private String username;
-
-    @Column(nullable = false)
     private String password;
+    private Role role;
 
-    @Column(nullable = false)
-    private String role;
-
-    public User(String username, String password, String role) {
-        this.username = username;
-        this.password = password;
-        this.role = role;
-    }
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
 
     public User() {}
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getRev() {
+        return rev;
+    }
+
+    public void setRev(String rev) {
+        this.rev = rev;
+    }
 
     public String getUsername() {
         return username;
@@ -43,12 +52,19 @@ public class User {
         this.password = password;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

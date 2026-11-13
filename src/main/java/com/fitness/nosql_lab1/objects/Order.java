@@ -1,5 +1,6 @@
 package com.fitness.nosql_lab1.objects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -8,39 +9,22 @@ import java.util.List;
 @Table(name = "orders")
 public class Order {
 
-    @Id
-    @Column(nullable = false, unique = true)
+    @JsonProperty("_id")
     private String id;
 
-    @Column(nullable = false)
-    private String status;
+    @JsonProperty("_rev")
+    private String rev;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private Status status;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> orderList;
+    @JsonProperty("user_id")
+    private String userId;
 
-    @Column(nullable = false)
-    private long cost;
+    private List<HistoryStatusItem> statusHistory;
+
+    private List<OrderItem> items;
 
     public Order() {}
-
-    public Order(String id, String status, User user, List<OrderItem> orderList, long cost) {
-        this.id = id;
-        this.status = status;
-        this.user = user;
-        this.orderList = orderList;
-        this.cost = cost;
-    }
-
-    public Order(String id, String status, User user, long cost) {
-        this.id = id;
-        this.status = status;
-        this.user = user;
-        this.cost = cost;
-    }
 
     public String getId() {
         return id;
@@ -50,35 +34,43 @@ public class Order {
         this.id = id;
     }
 
-    public String getStatus() {
+    public String getRev() {
+        return rev;
+    }
+
+    public void setRev(String rev) {
+        this.rev = rev;
+    }
+
+    public Status getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 
-    public User getUser() {
-        return user;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
-    public List<OrderItem> getOrderList() {
-        return orderList;
+    public List<HistoryStatusItem> getStatusHistory() {
+        return statusHistory;
     }
 
-    public void setOrderList(List<OrderItem> orderList) {
-        this.orderList = orderList;
+    public void setStatusHistory(List<HistoryStatusItem> statusHistory) {
+        this.statusHistory = statusHistory;
     }
 
-    public long getCost() {
-        return cost;
+    public List<OrderItem> getItems() {
+        return items;
     }
 
-    public void setCost(long cost) {
-        this.cost = cost;
+    public void setItems(List<OrderItem> items) {
+        this.items = items;
     }
 }
