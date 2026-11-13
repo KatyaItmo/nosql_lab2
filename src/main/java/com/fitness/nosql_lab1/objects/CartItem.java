@@ -4,18 +4,12 @@ public class CartItem {
     private String id;
     private Product product;
     private int amount;
-    private long cost;
+    private int cost;
 
     public CartItem() {}
 
-    public CartItem(String id, Product product, int amount, long cost) {
+    public CartItem(String id, Product product, int amount, int cost) {
         this.id = id;
-        this.product = product;
-        this.amount = amount;
-        this.cost = cost;
-    }
-
-    public CartItem(Product product, int amount, long cost) {
         this.product = product;
         this.amount = amount;
         this.cost = cost;
@@ -49,7 +43,7 @@ public class CartItem {
         return cost;
     }
 
-    public void setCost(long cost) {
+    public void setCost(int cost) {
         this.cost = cost;
     }
 }

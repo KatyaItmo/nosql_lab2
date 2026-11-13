@@ -1,7 +1,6 @@
 package com.fitness.nosql_lab1.rest;
 
-import com.fitness.nosql_lab1.dtos.UserRegistration;
-import com.fitness.nosql_lab1.objects.User;
+import com.fitness.nosql_lab1.dtos.UserDto;
 import com.fitness.nosql_lab1.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,17 +15,22 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@RequestBody UserRegistration user) {
+    @PostMapping("/user")
+    public ResponseEntity<String> registerUser(@RequestBody UserDto user) {
         return userService.registerUser(user);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody User user) throws Exception {
+    @DeleteMapping("/user")
+    public ResponseEntity<String> deleteUser(@RequestBody String username) {
+        return userService.deleteUser(username);
+    }
+
+    @PostMapping("/session")
+    public ResponseEntity<String> login(@RequestBody UserDto user) throws Exception {
         return userService.loginUser(user);
     }
 
-    @PostMapping("/logout")
+    @DeleteMapping("/session")
     public ResponseEntity<String> logout(
             @CookieValue(name = "SESSION", required = false) String session
     ) throws Exception {

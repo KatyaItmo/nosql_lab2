@@ -20,9 +20,14 @@ public class Order {
     @JsonProperty("user_id")
     private String userId;
 
+    @JsonProperty("status_history")
     private List<HistoryStatusItem> statusHistory;
 
     private List<OrderItem> items;
+    private int cost;
+
+    @JsonProperty("created_at")
+    private String createdAt;
 
     public Order() {}
 
@@ -72,5 +77,21 @@ public class Order {
 
     public void setItems(List<OrderItem> items) {
         this.items = items;
+    }
+
+    public int getCost() {
+        return cost;
+    }
+
+    public void setCost(int cost) {
+        this.cost = cost;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
     }
 }

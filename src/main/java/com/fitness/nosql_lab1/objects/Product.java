@@ -14,6 +14,9 @@ public class Product {
     private String description;
     private int price;
 
+    @JsonProperty("created_at")
+    private String createdAt;
+
     public Product() {}
 
     public String getId() {
@@ -54,5 +57,13 @@ public class Product {
 
     public void setPrice(int price) {
         this.price = price;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
     }
 }

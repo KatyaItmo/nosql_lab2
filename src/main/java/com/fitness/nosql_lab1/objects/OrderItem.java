@@ -15,6 +15,7 @@ public class OrderItem {
     private int productPrice;
 
     private int amount;
+    private int cost;
 
     public OrderItem() {}
 
@@ -56,5 +57,13 @@ public class OrderItem {
 
     public void setAmount(int amount) {
         this.amount = amount;
+    }
+
+    public int getCost() {
+        return cost;
+    }
+
+    public void setCost(int cost) {
+        this.cost = cost;
     }
 }

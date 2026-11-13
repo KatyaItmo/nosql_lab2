@@ -1,31 +1,37 @@
 package com.fitness.nosql_lab1.services;
 
+import com.fitness.nosql_lab1.dtos.UserDto;
 import com.fitness.nosql_lab1.dtos.UserRegistration;
+import com.fitness.nosql_lab1.objects.Role;
 import com.fitness.nosql_lab1.objects.User;
-import com.fitness.nosql_lab1.repository.UserRepository;
+import com.fitness.nosql_lab1.repos.UserRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Service
 public class UserService {
-    private final UserRepository userRepository;
+    private final UserRepository couchDbUserRepository;
     private final EtcdService etcdService;
     private final SessionService sessionService;
-    private final MessageService messageService;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, EtcdService etcdService, SessionService sessionService, MessageService messageService) {
-        this.userRepository = userRepository;
+    public UserService(UserRepository couchDbUserRepository,
+                       EtcdService etcdService,
+                       SessionService sessionService,
+                       PasswordEncoder passwordEncoder) {
+        this.couchDbUserRepository = couchDbUserRepository;
         this.etcdService = etcdService;
         this.sessionService = sessionService;
-        this.messageService = messageService;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public ResponseEntity<String> registerUser(UserRegistration userDto) {
-        if (userDto.getRole().equals("moder")) {
+    public ResponseEntity<String> registerUser(UserDto userDto) {
+        if (userDto.getRole().equals(Role.MODER)) {
             if (!userDto.getSecreteCode().equals("cheremsha")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("неверный код модератора");
             }
@@ -35,51 +41,43 @@ public class UserService {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(userDto.getUsername() + " уже зарегистрирован");
         }
 
+        String hashedPassword = passwordEncoder.encode(userDto.getPassword());
+
         User user = new User(
                 userDto.getUsername(),
-                userDto.getPassword(),
-                userDto.getRole()
+                userDto.getUsername(),
+                hashedPassword,
+                userDto.getRole(),
+                LocalDateTime.now()
         );
 
-        userRepository.save(user);
+        couchDbUserRepository.save(user);
 
-        if (user.getRole().equals("moder")) {
-            messageService.makeNewsletter("moder", "НОВЫЙ МОДЕРАТОР", "в системе зарегистрировался новый модератор " + user.getUsername());
-            return ResponseEntity.ok("зарегистрирован модератор " + user.getUsername());
-        }
-        messageService.makeNewsletter("moder", "НОВЫЙ ПОЛЬЗОВАТЕЛЬ", "в системе зарегистрировался новый пользователь " + user.getUsername());
         return ResponseEntity.ok("зарегистрирован пользователь " + user.getUsername());
     }
 
 
-    public ResponseEntity<String> loginUser(User userData) throws Exception {
-        if (!checkUser(userData.getUsername())) {
+    public ResponseEntity<String> loginUser(UserDto userDto) throws Exception {
+        if (!checkUser(userDto.getUsername())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("нет такого пользователя");
         }
 
-        String countKey = "counter:" + userData.getUsername();
+        User userDb = couchDbUserRepository.findById(userDto.getUsername());
 
-        User userDb = userRepository.findById(userData.getUsername()).orElse(null);
-
-        assert userDb != null;
-        if (!userDb.getPassword().equals(userData.getPassword())) {
-            if (etcdService.processCounter(userData.getUsername(), 100, 5, false) >= 5) {
+        if (!passwordEncoder.matches(userDto.getPassword(), userDb.getPassword())) {
+            if (etcdService.processCounter(userDto.getUsername(), 100, 5, false) >= 5) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("вы превысили число попыток входа");
             }
             return ResponseEntity.status(HttpStatus.CONFLICT).body("неверный пароль");
         }
 
-        if (userDb.getRole().equals("user") && userData.getRole().equals("moder")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("вы не модератор");
-        }
-
-        if (etcdService.processCounter(userData.getUsername(), 100, 5, true) >= 5) {
+        if (etcdService.processCounter(userDto.getUsername(), 100, 5, true) >= 5) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("ваш аккаунт временно недоступен (превышено число попыток входа)");
         }
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, sessionService.login(userData).toString())
-                .body("выполнен вход под логином " + userData.getUsername());
+                .header(HttpHeaders.SET_COOKIE, sessionService.login(userDb).toString())
+                .body("выполнен вход под логином " + userDto.getUsername());
     }
 
 
@@ -89,12 +87,14 @@ public class UserService {
                 .body("вы вышли из аккаунта");
     }
 
-
-    public List<User> getUsers(String role) {
-        return userRepository.findByRole(role);
+    public ResponseEntity<String> deleteUser(String username) {
+        if (!couchDbUserRepository.delete(username)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("не удалось удалить аккаунт");
+        }
+        return ResponseEntity.ok("аккаунт " + username + " удален");
     }
 
     private boolean checkUser(String username) {
-        return userRepository.findById(username).isPresent();
+        return couchDbUserRepository.findById(username) != null;
     }
 }

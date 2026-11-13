@@ -19,49 +19,49 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<Code> createOrder(
             @CookieValue(name = "SESSION", required = false) String session,
             @RequestBody OrderDto orderDto
-    ) throws Exception {
-        return orderService.createOrder(session, orderDto);
+    ) {
+        return orderService.createOrder(orderDto);
     }
 
-    @PostMapping("/repeat/{orderId}")
-    public ResponseEntity<Code> repeatOrder(
-            @CookieValue(name = "SESSION", required = false) String session,
-            @PathVariable String orderId
-    ) throws Exception {
-        return orderService.repeatOrder(session, orderId);
-    }
-
-    @PostMapping("/confirm")
+    @PutMapping
     public ResponseEntity<String> confirmOrder(
             @CookieValue(name = "SESSION", required = false) String session,
             @RequestBody Confirmation confirmation
     ) throws Exception {
-        return orderService.confirmOrder(session, confirmation);
+        return orderService.confirmOrder(confirmation);
     }
 
-    @PostMapping("/moderate")
+    @DeleteMapping
+    public ResponseEntity<String> deleteOrder(
+            @CookieValue(name = "SESSION", required = false) String session,
+            @RequestBody String orderId
+    ) throws Exception {
+        return orderService.deleteOrder(orderId);
+    }
+
+    @PostMapping("/moder")
     public ResponseEntity<String> moderateOrder(
             @CookieValue(name = "SESSION", required = false) String session,
             @RequestBody Moderation moderation
     ) throws Exception {
-        return orderService.moderateOrder(session, moderation);
+        return orderService.moderateOrder(moderation);
     }
 
-    @GetMapping("/allOrders")
+    @GetMapping("/moder")
     public ResponseEntity<List<OrderDto>> getAllOrders(
             @CookieValue(name = "SESSION", required = false) String session
     ) throws Exception {
-        return orderService.getAllOrders(session);
+        return orderService.getAllOrders();
     }
 
-    @GetMapping("/userOrders")
+    @GetMapping
     public ResponseEntity<List<OrderDto>> getUserOrders(
             @CookieValue(name = "SESSION", required = false) String session
     ) throws Exception {
-        return orderService.getUserOrders(session);
+        return orderService.getUserOrders();
     }
 }

@@ -16,7 +16,7 @@ public class CartController {
         this.cartService = cartService;
     }
 
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<String> addItem(
             @CookieValue(name = "SESSION", required = false) String session,
             @RequestBody CartItem cartItem
@@ -31,15 +31,15 @@ public class CartController {
         return cartService.getCart(session);
     }
 
-    @GetMapping("/delete/{productId}")
+    @DeleteMapping("/item")
     public ResponseEntity<String> deleteItem(
             @CookieValue(name = "SESSION", required = false) String session,
-            @PathVariable String productId
+            @RequestBody String productId
     ) throws Exception {
         return cartService.deleteItem(session, productId);
     }
 
-    @GetMapping("/clear")
+    @DeleteMapping("/all")
     public ResponseEntity<String> clearCart(
             @CookieValue(name = "SESSION", required = false) String session
     ) throws Exception {
