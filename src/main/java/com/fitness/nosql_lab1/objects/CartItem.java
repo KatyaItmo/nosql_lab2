@@ -39,7 +39,7 @@ public class CartItem {
         this.amount = amount;
     }
 
-    public long getCost() {
+    public int getCost() {
         return cost;
     }
 

@@ -22,10 +22,6 @@ public class CartService {
     }
 
     public ResponseEntity<String> addItem(String sessionToken, CartItem item) throws Exception {
-        if (!sessionService.checkUser(sessionToken, "user")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("работа с корзиной запрещена");
-        }
-
         String productId = item.getProduct().getId();
 
         String jsonMap = etcdService.get("cart:" + sessionToken);

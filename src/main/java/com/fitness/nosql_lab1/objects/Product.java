@@ -2,6 +2,8 @@ package com.fitness.nosql_lab1.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.time.LocalDateTime;
+
 public class Product {
 
     @JsonProperty("_id")
@@ -15,9 +17,17 @@ public class Product {
     private int price;
 
     @JsonProperty("created_at")
-    private String createdAt;
+    private LocalDateTime createdAt;
 
     public Product() {}
+
+    public Product(String id, String name, String description, int price, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.createdAt = createdAt;
+    }
 
     public String getId() {
         return id;
@@ -59,11 +69,11 @@ public class Product {
         this.price = price;
     }
 
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 }

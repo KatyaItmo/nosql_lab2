@@ -3,6 +3,7 @@ package com.fitness.nosql_lab1.objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -27,9 +28,19 @@ public class Order {
     private int cost;
 
     @JsonProperty("created_at")
-    private String createdAt;
+    private LocalDateTime createdAt;
 
     public Order() {}
+
+    public Order(String id, Status status, String userId, List<HistoryStatusItem> statusHistory, List<OrderItem> items, int cost, LocalDateTime createdAt) {
+        this.id = id;
+        this.status = status;
+        this.userId = userId;
+        this.statusHistory = statusHistory;
+        this.items = items;
+        this.cost = cost;
+        this.createdAt = createdAt;
+    }
 
     public String getId() {
         return id;
@@ -87,11 +98,11 @@ public class Order {
         this.cost = cost;
     }
 
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 }

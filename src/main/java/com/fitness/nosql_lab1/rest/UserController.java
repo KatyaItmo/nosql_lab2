@@ -1,6 +1,7 @@
 package com.fitness.nosql_lab1.rest;
 
 import com.fitness.nosql_lab1.dtos.UserDto;
+import com.fitness.nosql_lab1.objects.Role;
 import com.fitness.nosql_lab1.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

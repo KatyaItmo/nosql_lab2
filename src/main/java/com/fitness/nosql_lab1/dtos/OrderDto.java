@@ -1,27 +1,25 @@
 package com.fitness.nosql_lab1.dtos;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class OrderDto {
     private String id;
     private String status;
     private String username;
-    private List<OrderItemDto> orderList;
-    private long cost;
+    private List<OrderItemDto> items;
+    private int cost;
+    private LocalDateTime date;
 
     public OrderDto() {}
 
-    public OrderDto(String id, String status, String username, List<OrderItemDto> orderList, long cost) {
+    public OrderDto(String id, String status, String username, List<OrderItemDto> items, int cost, LocalDateTime date) {
         this.id = id;
         this.status = status;
         this.username = username;
-        this.orderList = orderList;
+        this.items = items;
         this.cost = cost;
-    }
-
-    public OrderDto(List<OrderItemDto> orderList, long cost) {
-        this.orderList = orderList;
-        this.cost = cost;
+        this.date = date;
     }
 
     public String getId() {
@@ -48,19 +46,27 @@ public class OrderDto {
         this.username = username;
     }
 
-    public List<OrderItemDto> getOrderList() {
-        return orderList;
+    public List<OrderItemDto> getItems() {
+        return items;
     }
 
-    public void setOrderList(List<OrderItemDto> orderList) {
-        this.orderList = orderList;
+    public void setItems(List<OrderItemDto> items) {
+        this.items = items;
     }
 
-    public long getCost() {
+    public int getCost() {
         return cost;
     }
 
-    public void setCost(long cost) {
+    public void setCost(int cost) {
         this.cost = cost;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
     }
 }

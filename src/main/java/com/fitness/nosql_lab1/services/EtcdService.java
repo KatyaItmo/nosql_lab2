@@ -7,6 +7,7 @@ import io.etcd.jetcd.Lease;
 import io.etcd.jetcd.op.Cmp;
 import io.etcd.jetcd.op.CmpTarget;
 import io.etcd.jetcd.op.Op;
+import io.etcd.jetcd.options.DeleteOption;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,14 @@ public class EtcdService {
         kvClient.delete(ByteSequence.from(key.getBytes(StandardCharsets.UTF_8))).get();
     }
 
+    public void deleteByPrefix(String prefix) throws Exception {
+        ByteSequence prefixKey = ByteSequence.from(prefix.getBytes(StandardCharsets.UTF_8));
+        DeleteOption deleteOption = DeleteOption.builder()
+                .isPrefix(true)
+                .build();
+        kvClient.delete(prefixKey, deleteOption).get();
+    }
+
     public void putTemporary(String key, String value, int time) throws Exception {
         long leaseId = leaseClient.grant(time).get().getID();
 
@@ -64,7 +73,7 @@ public class EtcdService {
     }
 
     public int processCounter(String key, int time, int limit, boolean reset) throws Exception {
-        while (true) {
+        for (int i = 0; i < 5; i++) {
             String stringValue = get(key);
             int currValue = stringValue == null ? 0 : Integer.parseInt(stringValue);
 
@@ -102,5 +111,6 @@ public class EtcdService {
                 return newValue;
             }
         }
+        return -1;
     }
 }

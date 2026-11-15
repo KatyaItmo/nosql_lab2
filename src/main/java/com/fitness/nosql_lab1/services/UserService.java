@@ -1,7 +1,6 @@
 package com.fitness.nosql_lab1.services;
 
 import com.fitness.nosql_lab1.dtos.UserDto;
-import com.fitness.nosql_lab1.dtos.UserRegistration;
 import com.fitness.nosql_lab1.objects.Role;
 import com.fitness.nosql_lab1.objects.User;
 import com.fitness.nosql_lab1.repos.UserRepository;
@@ -15,18 +14,17 @@ import java.time.LocalDateTime;
 
 @Service
 public class UserService {
-    private final UserRepository couchDbUserRepository;
-    private final EtcdService etcdService;
+    private final UserRepository userRepository;
     private final SessionService sessionService;
+    private final EtcdService etcdService;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository couchDbUserRepository,
-                       EtcdService etcdService,
-                       SessionService sessionService,
+    public UserService(UserRepository userRepository,
+                       SessionService sessionService, EtcdService etcdService,
                        PasswordEncoder passwordEncoder) {
-        this.couchDbUserRepository = couchDbUserRepository;
-        this.etcdService = etcdService;
+        this.userRepository = userRepository;
         this.sessionService = sessionService;
+        this.etcdService = etcdService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -51,7 +49,7 @@ public class UserService {
                 LocalDateTime.now()
         );
 
-        couchDbUserRepository.save(user);
+        userRepository.save(user);
 
         return ResponseEntity.ok("зарегистрирован пользователь " + user.getUsername());
     }
@@ -62,7 +60,7 @@ public class UserService {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("нет такого пользователя");
         }
 
-        User userDb = couchDbUserRepository.findById(userDto.getUsername());
+        User userDb = userRepository.findById(userDto.getUsername());
 
         if (!passwordEncoder.matches(userDto.getPassword(), userDb.getPassword())) {
             if (etcdService.processCounter(userDto.getUsername(), 100, 5, false) >= 5) {
@@ -88,13 +86,13 @@ public class UserService {
     }
 
     public ResponseEntity<String> deleteUser(String username) {
-        if (!couchDbUserRepository.delete(username)) {
+        if (!userRepository.delete(username)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("не удалось удалить аккаунт");
         }
         return ResponseEntity.ok("аккаунт " + username + " удален");
     }
 
     private boolean checkUser(String username) {
-        return couchDbUserRepository.findById(username) != null;
+        return userRepository.findById(username) != null;
     }
 }

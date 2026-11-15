@@ -19,7 +19,7 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<ProductDto>> getProducts(
             @CookieValue(name = "SESSION", required = false) String session
-    ) throws Exception {
+    ) {
         return productService.getProducts();
     }
 

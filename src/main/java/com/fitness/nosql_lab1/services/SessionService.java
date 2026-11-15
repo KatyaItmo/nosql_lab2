@@ -1,6 +1,7 @@
 package com.fitness.nosql_lab1.services;
 
 import com.fitness.nosql_lab1.objects.User;
+import com.fitness.nosql_lab1.repos.UserRepository;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
@@ -9,19 +10,16 @@ import java.util.UUID;
 
 @Service
 public class SessionService {
-    private final ObjectMapper objectMapper;
-    private final EtcdService etcdService;
+    private final UserRepository userRepository;
 
-    public SessionService(ObjectMapper objectMapper, EtcdService etcdService) {
-        this.objectMapper = objectMapper;
-        this.etcdService = etcdService;
+    public SessionService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     public ResponseCookie login(User user) throws Exception {
         String sessionToken = UUID.randomUUID().toString();
 
-        String userJson = objectMapper.writeValueAsString(user);
-        etcdService.putTemporary("session:" + sessionToken, userJson, 3600);
+        userRepository.createSession(sessionToken, user);
 
         return ResponseCookie.from("SESSION", sessionToken)
                 .httpOnly(true)
@@ -33,8 +31,7 @@ public class SessionService {
 
     public ResponseCookie logout(String sessionToken) throws Exception {
         if (sessionToken != null) {
-            etcdService.delete("session:" + sessionToken);
-            etcdService.delete("cart:" + sessionToken);
+            userRepository.deleteSession(sessionToken);
         }
 
         return ResponseCookie.from("SESSION", "")
@@ -42,28 +39,5 @@ public class SessionService {
                 .path("/")
                 .maxAge(0)
                 .build();
-    }
-
-    public boolean checkUser(String sessionToken, String role) throws Exception {
-        if (sessionToken == null || sessionToken.isBlank()) {
-            return false;
-        }
-
-        String userJson = etcdService.get("session:" + sessionToken);
-        if (userJson == null) {
-            return false;
-        }
-
-        if (role.equals("allUser")) {
-            return true;
-        }
-
-        User user = objectMapper.readValue(userJson, User.class);
-        return (user.getRole().equals(role));
-    }
-
-    public User getUser(String sessionToken) throws Exception {
-        String userJson = etcdService.get("session:" + sessionToken);
-        return objectMapper.readValue(userJson, User.class);
     }
 }
