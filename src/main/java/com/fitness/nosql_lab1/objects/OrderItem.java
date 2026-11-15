@@ -19,6 +19,15 @@ public class OrderItem {
 
     public OrderItem() {}
 
+    public OrderItem(String id, String productId, String productName, int productPrice, int amount, int cost) {
+        this.id = id;
+        this.productId = productId;
+        this.productName = productName;
+        this.productPrice = productPrice;
+        this.amount = amount;
+        this.cost = cost;
+    }
+
     public String getId() {
         return id;
     }

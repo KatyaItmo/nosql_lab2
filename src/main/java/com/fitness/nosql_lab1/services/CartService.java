@@ -1,100 +1,67 @@
 package com.fitness.nosql_lab1.services;
 
 import com.fitness.nosql_lab1.objects.CartItem;
-import org.springframework.http.HttpStatus;
+import com.fitness.nosql_lab1.objects.Product;
+import com.fitness.nosql_lab1.repos.CartRepository;
+import com.fitness.nosql_lab1.repos.ProductRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.*;
 
 @Service
 public class CartService {
-    private final EtcdService etcdService;
-    private final ObjectMapper objectMapper;
-    private final SessionService sessionService;
+    private final CartRepository cartRepository;
+    private final ProductRepository productRepository;
 
-    public CartService(EtcdService etcdService, ObjectMapper objectMapper, SessionService sessionService) {
-        this.etcdService = etcdService;
-        this.objectMapper = objectMapper;
-        this.sessionService = sessionService;
+    public CartService(CartRepository cartRepository, ProductRepository productRepository) {
+        this.cartRepository = cartRepository;
+        this.productRepository = productRepository;
+    }
+
+    public ResponseEntity<List<CartItem>> getCart(String sessionToken) throws Exception {
+        Map<String, CartItem> cartMap = cartRepository.getCart(sessionToken);
+        for (Map.Entry<String, CartItem> entry : cartMap.entrySet()) {
+            String productId = entry.getKey();
+            CartItem item = entry.getValue();
+            Product cartProduct = item.getProduct();
+            Product dbProduct = productRepository.findById(productId);
+
+            if (dbProduct != null) {
+                if (!cartProduct.equals(dbProduct)) {
+                    CartItem newItem = new CartItem(
+                            item.getId(),
+                            dbProduct,
+                            item.getAmount(),
+                            dbProduct.getPrice() * item.getAmount()
+                    );
+                    cartRepository.updateItem(sessionToken, productId, newItem);
+                }
+            } else {
+                cartRepository.deleteItem(sessionToken, productId);
+            }
+        }
+
+        cartMap = cartRepository.getCart(sessionToken);
+        return ResponseEntity.ok(cartMap.values().stream().toList());
     }
 
     public ResponseEntity<String> addItem(String sessionToken, CartItem item) throws Exception {
         String productId = item.getProduct().getId();
-
-        String jsonMap = etcdService.get("cart:" + sessionToken);
-        Map<String, CartItem> cart = jsonMap == null ? new HashMap<>() : objectMapper.readValue(jsonMap, new TypeReference<Map<String, CartItem>>() {});
-
-        if (cart.get(productId) != null) {
-            item.setAmount(item.getAmount() + cart.get(productId).getAmount());
-            item.setCost(item.getCost() + cart.get(productId).getCost());
-        } else {
-            String itemId = UUID.randomUUID().toString();
-            item.setId(itemId);
-        }
-        cart.put(productId, item);
-
-        jsonMap = objectMapper.writeValueAsString(cart);
-        etcdService.putTemporary("cart:" + sessionToken, jsonMap, 1800);
-
+        cartRepository.addItem(sessionToken, productId, item);
         return ResponseEntity.ok("товар " + item.getProduct().getName() + " добавлен в корзину");
     }
 
 
     public ResponseEntity<String> deleteItem(String sessionToken, String productId) throws Exception {
-        if (!sessionService.checkUser(sessionToken, "user")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("работа с корзиной запрещена");
-        }
-
-        String jsonMap = etcdService.get("cart:" + sessionToken);
-        Map<String, CartItem> cart = jsonMap == null ? new HashMap<>() : objectMapper.readValue(jsonMap, new TypeReference<Map<String, CartItem>>() {});
-
-        cart.remove(productId);
-
-        jsonMap = objectMapper.writeValueAsString(cart);
-        etcdService.putTemporary("cart:" + sessionToken, jsonMap, 1800);
-
+        cartRepository.deleteItem(sessionToken, productId);
         return ResponseEntity.ok("товар убран из корзины");
     }
 
 
     public ResponseEntity<String> clearCart(String sessionToken) throws Exception {
-        if (!sessionService.checkUser(sessionToken, "user")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("работа с корзиной запрещена");
-        }
-
-        delete(sessionToken);
-
+        cartRepository.clearCart(sessionToken);
         return ResponseEntity.ok("корзина очищена");
-    }
-
-
-    public ResponseEntity<List<CartItem>> getCart(String sessionToken) throws Exception {
-        List<CartItem> listCart = getList(sessionToken);
-
-        if (listCart == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-        }
-        return ResponseEntity.ok(listCart);
-    }
-
-
-    public void delete(String sessionToken) throws Exception {
-        String jsonMap = objectMapper.writeValueAsString(new HashMap<>());
-        etcdService.putTemporary("cart:" + sessionToken, jsonMap, 1800);
-    }
-
-
-    public List<CartItem> getList(String sessionToken) throws Exception {
-        if (!sessionService.checkUser(sessionToken, "user")) {
-            return null;
-        }
-
-        String jsonMap = etcdService.get("cart:" + sessionToken);
-        Map<String, CartItem> cart = jsonMap == null ? new HashMap<>() : objectMapper.readValue(jsonMap, new TypeReference<Map<String, CartItem>>() {});
-
-        return new ArrayList<>(cart.values());
     }
 }

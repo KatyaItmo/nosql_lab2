@@ -16,11 +16,13 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<List<ProductDto>> getProducts(
-            @CookieValue(name = "SESSION", required = false) String session
-    ) {
-        return productService.getProducts();
+            @CookieValue(name = "SESSION", required = false) String session,
+            @RequestParam(name = "limit", defaultValue = "10") int limit,
+            @RequestParam(name = "skip", defaultValue = "0") int skip
+    ) throws Exception {
+        return productService.getProducts(limit, skip);
     }
 
     @PostMapping

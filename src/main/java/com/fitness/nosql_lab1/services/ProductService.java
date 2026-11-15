@@ -14,15 +14,12 @@ import java.util.UUID;
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
-    private final SessionService sessionService;
 
-    public ProductService(ProductRepository productRepository,
-                          SessionService sessionService) {
+    public ProductService(ProductRepository productRepository) {
         this.productRepository = productRepository;
-        this.sessionService = sessionService;
     }
 
-    public ResponseEntity<String> createProduct(ProductDto dto) {
+    public ResponseEntity<String> createProduct(ProductDto dto) throws Exception {
         String id = UUID.randomUUID().toString();
 
         Product product = new Product(
@@ -38,7 +35,7 @@ public class ProductService {
         return ResponseEntity.ok("добавлен новый товар " + id);
     }
 
-    public ResponseEntity<String> updateProduct(ProductDto dto) {
+    public ResponseEntity<String> updateProduct(ProductDto dto) throws Exception {
         Product product = new Product(
                 dto.getId(),
                 dto.getName(),
@@ -59,8 +56,8 @@ public class ProductService {
         return ResponseEntity.ok("товар с id " + productId + " удален");
     }
 
-    public ResponseEntity<List<ProductDto>> getProducts() {
-        List<Product> productsDb = productRepository.findAll();
+    public ResponseEntity<List<ProductDto>> getProducts(int limit, int skip) throws Exception {
+        List<Product> productsDb = productRepository.findCachedProductsPaginated(limit, skip);
         List<ProductDto> products = convertProducts(productsDb);
         return ResponseEntity.ok(products);
     }

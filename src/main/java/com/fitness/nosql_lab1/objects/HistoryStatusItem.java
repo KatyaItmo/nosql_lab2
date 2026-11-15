@@ -12,6 +12,11 @@ public class HistoryStatusItem {
 
     public HistoryStatusItem() {}
 
+    public HistoryStatusItem(Status status, LocalDateTime changedAt) {
+        this.status = status;
+        this.changedAt = changedAt;
+    }
+
     public Status getStatus() {
         return status;
     }

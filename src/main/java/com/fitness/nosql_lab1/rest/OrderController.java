@@ -4,6 +4,7 @@ import com.fitness.nosql_lab1.dtos.Code;
 import com.fitness.nosql_lab1.dtos.Confirmation;
 import com.fitness.nosql_lab1.dtos.Moderation;
 import com.fitness.nosql_lab1.dtos.OrderDto;
+import com.fitness.nosql_lab1.objects.Status;
 import com.fitness.nosql_lab1.services.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +24,8 @@ public class OrderController {
     public ResponseEntity<Code> createOrder(
             @CookieValue(name = "SESSION", required = false) String session,
             @RequestBody OrderDto orderDto
-    ) {
-        return orderService.createOrder(orderDto);
+    ) throws Exception {
+        return orderService.createOrder(session, orderDto);
     }
 
     @PutMapping
@@ -53,15 +54,21 @@ public class OrderController {
 
     @GetMapping("/moder")
     public ResponseEntity<List<OrderDto>> getAllOrders(
-            @CookieValue(name = "SESSION", required = false) String session
+            @CookieValue(name = "SESSION", required = false) String session,
+            @RequestParam(name = "limit", defaultValue = "10") int limit,
+            @RequestParam(name = "skip", defaultValue = "0") int skip,
+            @RequestParam(name = "status", defaultValue = "CONFIRMED") Status status
     ) throws Exception {
-        return orderService.getAllOrders();
+        return orderService.getAllOrders(status, limit, skip);
     }
 
     @GetMapping
     public ResponseEntity<List<OrderDto>> getUserOrders(
-            @CookieValue(name = "SESSION", required = false) String session
+            @CookieValue(name = "SESSION", required = false) String session,
+            @RequestParam(name = "limit", defaultValue = "10") int limit,
+            @RequestParam(name = "skip", defaultValue = "0") int skip,
+            @RequestParam(name = "status", defaultValue = "ACCEPTED") Status status
     ) throws Exception {
-        return orderService.getUserOrders();
+        return orderService.getUserOrders(session, status, limit, skip);
     }
 }
