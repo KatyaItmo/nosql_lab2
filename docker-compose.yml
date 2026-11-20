@@ -2,14 +2,26 @@ version: '3.8'
 
 services:
 
-  couch-db:
+  couch-db-1:
     image: couchdb:3.3
-    container_name: couch-db
+    container_name: couch-db-1
     environment:
-      - COUCHDB_USER=chermsha
-      - COUCHDB_PASSWORD=password67
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
     ports:
       - "5984:5984"
+    volumes:
+      - couchdb-data:/opt/couch-db/data
+    restart: unless-stopped
+
+  couch-db-2:
+    image: couchdb:3.3
+    container_name: couch-db-2
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+    ports:
+      - "5985:5985"
     volumes:
       - couchdb-data:/opt/couch-db/data
     restart: unless-stopped

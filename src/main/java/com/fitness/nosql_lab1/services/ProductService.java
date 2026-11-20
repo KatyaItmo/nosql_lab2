@@ -2,7 +2,7 @@ package com.fitness.nosql_lab1.services;
 
 import com.fitness.nosql_lab1.dtos.ProductDto;
 import com.fitness.nosql_lab1.objects.Product;
-import com.fitness.nosql_lab1.repos.ProductRepository;
+import com.fitness.nosql_lab1.db.repos.ProductDao;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -13,10 +13,10 @@ import java.util.UUID;
 
 @Service
 public class ProductService {
-    private final ProductRepository productRepository;
+    private final ProductDao productDao;
 
-    public ProductService(ProductRepository productRepository) {
-        this.productRepository = productRepository;
+    public ProductService(ProductDao productDao) {
+        this.productDao = productDao;
     }
 
     public ResponseEntity<String> createProduct(ProductDto dto) throws Exception {
@@ -27,10 +27,18 @@ public class ProductService {
                 dto.getName(),
                 dto.getDescription(),
                 dto.getPrice(),
+                dto.getAttachments().stream()
+                        .map(attachmentDto -> new Attachment(
+                                UUID.randomUUID().toString(),
+                                attachmentDto.getFilename(),
+                                attachmentDto.getUrl(),
+                                LocalDateTime.now()
+                        ))
+                        .toList(),
                 LocalDateTime.now()
         );
 
-        productRepository.save(product);
+        productDao.save(product);
 
         return ResponseEntity.ok("добавлен новый товар " + id);
     }
@@ -41,23 +49,31 @@ public class ProductService {
                 dto.getName(),
                 dto.getDescription(),
                 dto.getPrice(),
+                dto.getAttachments().stream()
+                        .map(attachmentDto -> new Attachment(
+                                attachmentDto.getId(),
+                                attachmentDto.getFilename(),
+                                attachmentDto.getUrl(),
+                                LocalDateTime.now()
+                        ))
+                        .toList(),
                 LocalDateTime.now()
         );
 
-        productRepository.save(product);
+        productDao.save(product);
 
         return ResponseEntity.ok("изменен товар с " + dto.getId());
     }
 
     public ResponseEntity<String> deleteProduct(String productId) {
-        if (!productRepository.delete(productId)) {
+        if (!productDao.delete(productId)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("не удалось удалить товар");
         }
         return ResponseEntity.ok("товар с id " + productId + " удален");
     }
 
     public ResponseEntity<List<ProductDto>> getProducts(int limit, int skip) throws Exception {
-        List<Product> productsDb = productRepository.findCachedProductsPaginated(limit, skip);
+        List<Product> productsDb = productDao.findCachedProductsPaginated(limit, skip);
         List<ProductDto> products = convertProducts(productsDb);
         return ResponseEntity.ok(products);
     }

@@ -1,28 +1,27 @@
 package com.fitness.nosql_lab1.services;
 
-import com.fitness.nosql_lab1.objects.User;
-import com.fitness.nosql_lab1.repos.CartRepository;
-import com.fitness.nosql_lab1.repos.UserRepository;
+import com.fitness.nosql_lab1.dtos.userDto.UserData;
+import com.fitness.nosql_lab1.db.repos.CartDao;
+import com.fitness.nosql_lab1.db.repos.UserDao;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.UUID;
 
 @Service
 public class SessionService {
-    private final UserRepository userRepository;
-    private final CartRepository cartRepository;
+    private final UserDao userDao;
+    private final CartDao cartDao;
 
-    public SessionService(UserRepository userRepository, CartRepository cartRepository) {
-        this.userRepository = userRepository;
-        this.cartRepository = cartRepository;
+    public SessionService(UserDao userDao, CartDao cartDao) {
+        this.userDao = userDao;
+        this.cartDao = cartDao;
     }
 
-    public ResponseCookie login(User user) throws Exception {
+    public ResponseCookie login(UserData user) throws Exception {
         String sessionToken = UUID.randomUUID().toString();
 
-        userRepository.createSession(sessionToken, user);
+        userDao.createSession(sessionToken, user);
 
         return ResponseCookie.from("SESSION", sessionToken)
                 .httpOnly(true)
@@ -34,8 +33,8 @@ public class SessionService {
 
     public ResponseCookie logout(String sessionToken) throws Exception {
         if (sessionToken != null) {
-            userRepository.deleteSession(sessionToken);
-            cartRepository.clearCart(sessionToken);
+            userDao.deleteSession(sessionToken);
+            cartDao.clearCart(sessionToken);
         }
 
         return ResponseCookie.from("SESSION", "")

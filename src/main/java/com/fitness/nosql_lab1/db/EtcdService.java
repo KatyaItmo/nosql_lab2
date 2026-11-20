@@ -1,4 +1,4 @@
-package com.fitness.nosql_lab1.services;
+package com.fitness.nosql_lab1.db;
 
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.KV;
@@ -8,12 +8,10 @@ import io.etcd.jetcd.op.Cmp;
 import io.etcd.jetcd.op.CmpTarget;
 import io.etcd.jetcd.op.Op;
 import io.etcd.jetcd.options.DeleteOption;
-import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.List;
 
 @Service

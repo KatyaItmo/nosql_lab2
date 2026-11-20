@@ -1,13 +1,13 @@
 package com.fitness.nosql_lab1.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fitness.nosql_lab1.db.repos.UserDao;
+import com.fitness.nosql_lab1.dtos.userDto.UserData;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Entity
-@Table(name = "orders")
 public class Order {
 
     @JsonProperty("_id")
@@ -17,12 +17,10 @@ public class Order {
     private String rev;
 
     private Status status;
+    private UserData user;
 
-    @JsonProperty("user_id")
-    private String userId;
-
-    @JsonProperty("status_history")
-    private List<HistoryStatusItem> statusHistory;
+    @JsonProperty("change_counter")
+    private int changeCounter;
 
     private List<OrderItem> items;
     private int cost;
@@ -32,11 +30,11 @@ public class Order {
 
     public Order() {}
 
-    public Order(String id, Status status, String userId, List<HistoryStatusItem> statusHistory, List<OrderItem> items, int cost, LocalDateTime createdAt) {
+    public Order(String id, Status status, UserData user, int changeCounter, List<OrderItem> items, int cost, LocalDateTime createdAt) {
         this.id = id;
         this.status = status;
-        this.userId = userId;
-        this.statusHistory = statusHistory;
+        this.user = user;
+        this.changeCounter = changeCounter;
         this.items = items;
         this.cost = cost;
         this.createdAt = createdAt;
@@ -66,20 +64,20 @@ public class Order {
         this.status = status;
     }
 
-    public String getUserId() {
-        return userId;
+    public UserData getUser() {
+        return user;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setUser(UserData user) {
+        this.user = user;
     }
 
-    public List<HistoryStatusItem> getStatusHistory() {
-        return statusHistory;
+    public int getChangeCounter() {
+        return changeCounter;
     }
 
-    public void setStatusHistory(List<HistoryStatusItem> statusHistory) {
-        this.statusHistory = statusHistory;
+    public void setChangeCounter(int changeCounter) {
+        this.changeCounter = changeCounter;
     }
 
     public List<OrderItem> getItems() {

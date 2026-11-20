@@ -1,5 +1,9 @@
 package com.fitness.nosql_lab1.dtos;
 
+import com.fitness.nosql_lab1.dtos.userDto.AttachmentDto;
+
+import java.util.List;
+
 public class ProductDto {
     private String id;
     private String name;

@@ -1,11 +1,9 @@
 package com.fitness.nosql_lab1.configs;
 
 import com.fitness.nosql_lab1.objects.Role;
-import com.fitness.nosql_lab1.objects.User;
-import com.fitness.nosql_lab1.repos.UserRepository;
-import com.fitness.nosql_lab1.services.EtcdService;
+import com.fitness.nosql_lab1.objects.user.User;
+import com.fitness.nosql_lab1.db.repos.UserDao;
 import org.jspecify.annotations.NonNull;
-import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -22,10 +20,10 @@ import java.util.Collections;
 
 @Component
 public class SessionFilter extends OncePerRequestFilter {
-    private final UserRepository userRepository;
+    private final UserDao userDao;
 
-    public SessionFilter(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public SessionFilter(UserDao userDao) {
+        this.userDao = userDao;
     }
 
     @Override
@@ -44,7 +42,7 @@ public class SessionFilter extends OncePerRequestFilter {
 
         if (sessionToken != null && !sessionToken.isEmpty()) {
             try {
-                User user = userRepository.findBySession(sessionToken);
+                User user = userDao.findBySession(sessionToken);
                 if (!(user == null)) {
                     Role role = user.getRole();
                     String impersonateHeader = request.getHeader("X-Impersonate-Role");

@@ -1,7 +1,10 @@
-package com.fitness.nosql_lab1.objects;
+package com.fitness.nosql_lab1.objects.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fitness.nosql_lab1.objects.Role;
+
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public class User {
 
@@ -15,17 +18,17 @@ public class User {
     private String password;
     private Role role;
 
-    @JsonProperty("created_at")
-    private LocalDateTime createdAt;
+    @JsonProperty("_attachments")
+    private Map<String, AttachmentMetadata> attachments;
 
     public User() {}
 
-    public User(String id, String username, String password, Role role, LocalDateTime createdAt) {
+    public User(String id, String username, String password, Role role, Map<String, AttachmentMetadata> attachments) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.role = role;
-        this.createdAt = createdAt;
+        this.attachments = attachments;
     }
 
     public String getId() {
@@ -68,11 +71,11 @@ public class User {
         this.role = role;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public Map<String, AttachmentMetadata> getAttachments() {
+        return attachments;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setAttachments(Map<String, AttachmentMetadata> attachments) {
+        this.attachments = attachments;
     }
 }

@@ -1,9 +1,15 @@
 package com.fitness.nosql_lab1.services;
 
-import com.fitness.nosql_lab1.dtos.UserDto;
+import com.fitness.nosql_lab1.db.EtcdService;
+import com.fitness.nosql_lab1.db.repos.data.DaoResponse;
+import com.fitness.nosql_lab1.dtos.userDto.AttachmentDto;
+import com.fitness.nosql_lab1.dtos.userDto.UserAuth;
+import com.fitness.nosql_lab1.dtos.userDto.UserData;
+import com.fitness.nosql_lab1.dtos.userDto.UserRegistration;
 import com.fitness.nosql_lab1.objects.Role;
-import com.fitness.nosql_lab1.objects.User;
-import com.fitness.nosql_lab1.repos.UserRepository;
+import com.fitness.nosql_lab1.objects.user.AttachmentMetadata;
+import com.fitness.nosql_lab1.objects.user.User;
+import com.fitness.nosql_lab1.db.repos.UserDao;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,24 +17,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
-    private final UserRepository userRepository;
+    private final UserDao userDao;
     private final SessionService sessionService;
     private final EtcdService etcdService;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository,
+    public UserService(UserDao userDao,
                        SessionService sessionService, EtcdService etcdService,
                        PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
+        this.userDao = userDao;
         this.sessionService = sessionService;
         this.etcdService = etcdService;
         this.passwordEncoder = passwordEncoder;
     }
 
-    public ResponseEntity<String> registerUser(UserDto userDto) {
+    public ResponseEntity<String> registerUser(UserRegistration userDto) {
         if (userDto.getRole().equals(Role.MODER)) {
             if (!userDto.getSecreteCode().equals("cheremsha")) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("неверный код модератора");
@@ -46,36 +54,59 @@ public class UserService {
                 userDto.getUsername(),
                 hashedPassword,
                 userDto.getRole(),
+                Map.of(),
                 LocalDateTime.now()
         );
 
-        userRepository.save(user);
+        userDao.createUser(user);
 
         return ResponseEntity.ok("зарегистрирован пользователь " + user.getUsername());
     }
 
 
-    public ResponseEntity<String> loginUser(UserDto userDto) throws Exception {
+    public ResponseEntity<UserData> loginUser(UserAuth userDto) throws Exception {
         if (!checkUser(userDto.getUsername())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("нет такого пользователя");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new UserData("нет такого пользователя"));
         }
 
-        User userDb = userRepository.findById(userDto.getUsername());
+        User userDb = userDao.getUserById(userDto.getUsername());
 
         if (!passwordEncoder.matches(userDto.getPassword(), userDb.getPassword())) {
             if (etcdService.processCounter(userDto.getUsername(), 100, 5, false) >= 5) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("вы превысили число попыток входа");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new UserData("вы превысили число попыток входа"));
             }
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("неверный пароль");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new UserData("неверный пароль"));
         }
 
         if (etcdService.processCounter(userDto.getUsername(), 100, 5, true) >= 5) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("ваш аккаунт временно недоступен (превышено число попыток входа)");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new UserData("ваш аккаунт временно недоступен (превышено число попыток входа)"));
         }
 
+        UserData userData = new UserData(
+                userDb.getUsername(),
+                userDb.getRole(),
+                userDb.getAttachments().entrySet().stream()
+                        .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                entry -> {
+                                    AttachmentMetadata model = entry.getValue();
+                                    return new AttachmentDto(
+                                            model.getContentType(),
+                                            model.getLength(),
+                                            model.getDigest(),
+                                            model.getRevpos(),
+                                            model.isStub()
+                                    );
+                                }
+                        ))
+        );
+
+        String cookie = sessionService.login(userData).toString();
+        userData.setAuthMessage("выполнен вход под логином " + userDto.getUsername());
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, sessionService.login(userDb).toString())
-                .body("выполнен вход под логином " + userDto.getUsername());
+                .header(HttpHeaders.SET_COOKIE, cookie)
+                .body(userData);
     }
 
 
@@ -86,13 +117,14 @@ public class UserService {
     }
 
     public ResponseEntity<String> deleteUser(String username) {
-        if (!userRepository.delete(username)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("не удалось удалить аккаунт");
+        DaoResponse daoResponse = userDao.deleteUser(username);
+        if (!daoResponse.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(daoResponse.getMessage());
         }
-        return ResponseEntity.ok("аккаунт " + username + " удален");
+        return ResponseEntity.ok(daoResponse.getMessage());
     }
 
     private boolean checkUser(String username) {
-        return userRepository.findById(username) != null;
+        return userDao.getUserById(username) != null;
     }
 }
