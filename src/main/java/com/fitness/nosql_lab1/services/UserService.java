@@ -54,8 +54,7 @@ public class UserService {
                 userDto.getUsername(),
                 hashedPassword,
                 userDto.getRole(),
-                Map.of(),
-                LocalDateTime.now()
+                Map.of()
         );
 
         userDao.createUser(user);

@@ -65,23 +65,37 @@ public class ProductDao {
         deleteProductsCache();
     }
 
-    public boolean updateProduct(Product product) throws Exception {
-        CouchSaveResponse response = restClient.put()
-                .uri("/{db}/{id}", DB_NAME, product.getId())
-                .body(product)
-                .retrieve()
-                .body(CouchSaveResponse.class);
+    public DaoResponse updateProduct(Product product) throws Exception {
+        Product oldProduct = getProductById(product.getId());
+        if (oldProduct == null) {
+            return new DaoResponse(false, "товар " + "'" + product.getName() + "'" + "не найден");
+        }
 
-        deleteProductsCache();
+        product.setRev(oldProduct.getRev());
 
-        return response != null;
+        try {
+            CouchSaveResponse response = restClient.put()
+                    .uri("/{db}/{id}", DB_NAME, product.getId())
+                    .body(product)
+                    .retrieve()
+                    .body(CouchSaveResponse.class);
+
+            if (response == null) {
+                return new DaoResponse(false, "не удалось обновить товар");
+            }
+            return new DaoResponse(true, "товар " + "'" + product.getName() + "'" + "успешно обновлен");
+        } catch (HttpClientErrorException.Conflict ex) {
+            return new DaoResponse(false, "конфликт ревизий при обновлении товара " + "'" + product.getName() + "'");
+        } catch (HttpClientErrorException ex) {
+            return new DaoResponse(false, "ошибка базы данных (" + ex.getStatusCode().value() + ") при обновлении товара");
+        }
     }
 
     public DaoResponse deleteProduct(String productId) {
         try {
             Product product = getProductById(productId);
             if (product == null) {
-                return new DaoResponse(false, "товар с id=" + productId + " не найден в базе данных");
+                return new DaoResponse(false, "товар не найден в базе данных");
             }
 
             restClient.delete()
@@ -91,12 +105,12 @@ public class ProductDao {
 
             deleteProductsCache();
 
-            return new DaoResponse(true, "товар с id=" + productId + " удален");
+            return new DaoResponse(true, "товар успешно удален");
 
         } catch (HttpClientErrorException.NotFound e) {
-            return new DaoResponse(false, "товар с id=" + productId + " не найден в базе данных");
+            return new DaoResponse(false, "товар не найден в базе данных");
         } catch (HttpClientErrorException.Conflict e) {
-            return new DaoResponse(false, "конфликт при попытке удаления товара с id=" + productId);
+            return new DaoResponse(false, "конфликт при попытке удаления товара");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

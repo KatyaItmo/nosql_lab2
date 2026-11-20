@@ -58,7 +58,7 @@ public class OrderController {
             @RequestParam(name = "limit", defaultValue = "10") int limit,
             @RequestParam(name = "skip", defaultValue = "0") int skip,
             @RequestParam(name = "status", defaultValue = "CONFIRMED") Status status
-    ) throws Exception {
+    ) {
         return orderService.getAllOrders(status, limit, skip);
     }
 
@@ -69,6 +69,6 @@ public class OrderController {
             @RequestParam(name = "skip", defaultValue = "0") int skip,
             @RequestParam(name = "status", defaultValue = "ACCEPTED") Status status
     ) throws Exception {
-        return orderService.getUserOrders(session, status, limit, skip);
+        return orderService.getUserOrders(session, limit, skip);
     }
 }

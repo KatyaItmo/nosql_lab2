@@ -1,5 +1,6 @@
 package com.fitness.nosql_lab1.services;
 
+import com.fitness.nosql_lab1.db.repos.data.DaoResponse;
 import com.fitness.nosql_lab1.dtos.ProductDto;
 import com.fitness.nosql_lab1.objects.Product;
 import com.fitness.nosql_lab1.db.repos.ProductDao;
@@ -20,27 +21,20 @@ public class ProductService {
     }
 
     public ResponseEntity<String> createProduct(ProductDto dto) throws Exception {
-        String id = UUID.randomUUID().toString();
+        String id = dto.getName() + UUID.randomUUID();
 
         Product product = new Product(
                 id,
                 dto.getName(),
                 dto.getDescription(),
                 dto.getPrice(),
-                dto.getAttachments().stream()
-                        .map(attachmentDto -> new Attachment(
-                                UUID.randomUUID().toString(),
-                                attachmentDto.getFilename(),
-                                attachmentDto.getUrl(),
-                                LocalDateTime.now()
-                        ))
-                        .toList(),
+                dto.getTags(),
                 LocalDateTime.now()
         );
 
-        productDao.save(product);
+        productDao.createProduct(product);
 
-        return ResponseEntity.ok("добавлен новый товар " + id);
+        return ResponseEntity.ok("добавлен новый товар " + "'" + product.getName() + "'");
     }
 
     public ResponseEntity<String> updateProduct(ProductDto dto) throws Exception {
@@ -49,31 +43,27 @@ public class ProductService {
                 dto.getName(),
                 dto.getDescription(),
                 dto.getPrice(),
-                dto.getAttachments().stream()
-                        .map(attachmentDto -> new Attachment(
-                                attachmentDto.getId(),
-                                attachmentDto.getFilename(),
-                                attachmentDto.getUrl(),
-                                LocalDateTime.now()
-                        ))
-                        .toList(),
+                dto.getTags(),
                 LocalDateTime.now()
         );
 
-        productDao.save(product);
-
-        return ResponseEntity.ok("изменен товар с " + dto.getId());
+        DaoResponse response = productDao.updateProduct(product);
+        if (!response.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response.getMessage());
+        }
+        return ResponseEntity.ok(response.getMessage());
     }
 
     public ResponseEntity<String> deleteProduct(String productId) {
-        if (!productDao.delete(productId)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("не удалось удалить товар");
+        DaoResponse response = productDao.deleteProduct(productId);
+        if (!response.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response.getMessage());
         }
-        return ResponseEntity.ok("товар с id " + productId + " удален");
+        return ResponseEntity.ok(response.getMessage());
     }
 
-    public ResponseEntity<List<ProductDto>> getProducts(int limit, int skip) throws Exception {
-        List<Product> productsDb = productDao.findCachedProductsPaginated(limit, skip);
+    public ResponseEntity<List<ProductDto>> getProducts(String tag, LocalDateTime fromDate, LocalDateTime toDate, int limit, int skip) throws Exception {
+        List<Product> productsDb = productDao.getProducts(tag, fromDate, toDate, limit, skip);
         List<ProductDto> products = convertProducts(productsDb);
         return ResponseEntity.ok(products);
     }
@@ -84,7 +74,8 @@ public class ProductService {
                         product.getId(),
                         product.getName(),
                         product.getDescription(),
-                        product.getPrice()
+                        product.getPrice(),
+                        product.getTags()
                 ))
                 .toList();
     }

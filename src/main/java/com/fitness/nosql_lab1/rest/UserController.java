@@ -56,7 +56,7 @@ public class UserController {
     public ResponseEntity<byte[]> downloadAttachment(
             @CookieValue(name = "SESSION", required = false) String session,
             @PathVariable("id") String userId,
-            @RequestParam("filename") String filename
+            @PathVariable("filename") String filename
     ) throws Exception {
         return attachmentService.downloadAttachment(session, userId, filename);
     }

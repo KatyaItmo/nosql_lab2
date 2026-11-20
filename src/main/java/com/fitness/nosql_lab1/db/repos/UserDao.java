@@ -92,23 +92,35 @@ public class UserDao {
             return new DaoResponse(false, "нельзя добавить вложение, юзер с id=" + userId + " не найден в базе данных");
         }
 
-        CouchSaveResponse response = restClient.put()
-                .uri("/{db}/{id}/{filename}?rev={rev}", DB_NAME, userId, file.getFilename(), user.getRev())
-                .header("Content-Type", file.getContentType())
-                .body(file.getFileBytes())
-                .retrieve()
-                .body(CouchSaveResponse.class);
+        String contentType = (file.getContentType() != null && !file.getContentType().isBlank())
+                ? file.getContentType()
+                : "application/octet-stream";
 
-        if (response == null) {
-            return new DaoResponse(false, "не удалось добавить вложение " + file.getFilename());
+        try {
+            CouchSaveResponse response = restClient.put()
+                    .uri("/{db}/{id}/{filename}?rev={rev}", DB_NAME, userId, file.getFilename(), user.getRev())
+                    .header("Content-Type", contentType)
+                    .body(file.getFileBytes())
+                    .retrieve()
+                    .body(CouchSaveResponse.class);
+
+            if (response == null) {
+                return new DaoResponse(false, "не удалось добавить вложение " + file.getFilename());
+            }
+            return new DaoResponse(true, "добавлено вложение " + file.getFilename());
+        } catch (HttpClientErrorException ex) {
+            return new DaoResponse(false, "ошибка CouchDB (" + ex.getStatusCode().value() + ") при добавлении вложения " + file.getFilename());
         }
-        return new DaoResponse(true, "добавлено вложение " + file.getFilename());
     }
 
     public byte[] downloadAttachment(String userId, String filename) {
-        return restClient.get()
-                .uri("/{db}/{id}/{filename}", DB_NAME, userId, filename)
-                .retrieve()
-                .body(byte[].class);
+        try {
+            return restClient.get()
+                    .uri("/{db}/{id}/{filename}", DB_NAME, userId, filename)
+                    .retrieve()
+                    .body(byte[].class);
+        } catch (HttpClientErrorException.NotFound ex) {
+            return null;
+        }
     }
 }

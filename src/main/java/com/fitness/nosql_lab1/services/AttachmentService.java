@@ -4,10 +4,7 @@ import com.fitness.nosql_lab1.db.repos.UserDao;
 import com.fitness.nosql_lab1.db.repos.data.DaoResponse;
 import com.fitness.nosql_lab1.dtos.userDto.UserData;
 import com.fitness.nosql_lab1.objects.user.File;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,7 +21,11 @@ public class AttachmentService {
     public ResponseEntity<String> uploadAttachment(String sessionToken, String userId, MultipartFile file) throws Exception {
         UserData sessionUser = userDao.findBySession(sessionToken);
         if (!sessionUser.getUsername().equals(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("вы не может прикрепить вложение к юзеру " + userId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("вы не можете прикрепить вложение к юзеру " + userId);
+        }
+
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("нельзя прикрепить пустой файл");
         }
 
         try {
@@ -55,12 +56,15 @@ public class AttachmentService {
         }
 
         byte[] fileBytes = userDao.downloadAttachment(userId, filename);
-        if (fileBytes == null) {
+        if (fileBytes == null || fileBytes.length == 0) {
             return ResponseEntity.notFound().build();
         }
 
+        MediaType mediaType = MediaTypeFactory.getMediaType(filename)
+                .orElse(MediaType.APPLICATION_OCTET_STREAM);
+
         return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG)
+                .contentType(mediaType)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
                 .body(fileBytes);
     }

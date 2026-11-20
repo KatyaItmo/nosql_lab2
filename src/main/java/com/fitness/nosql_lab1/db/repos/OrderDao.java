@@ -1,6 +1,7 @@
 package com.fitness.nosql_lab1.db.repos;
 
 import com.fitness.nosql_lab1.db.repos.data.CouchSaveResponse;
+import com.fitness.nosql_lab1.db.repos.data.DaoResponse;
 import com.fitness.nosql_lab1.objects.Order;
 import com.fitness.nosql_lab1.objects.Status;
 import jakarta.annotation.PostConstruct;
@@ -105,14 +106,30 @@ public class OrderDao {
 
     }
 
-    public boolean updateOrder(Order order) throws Exception {
-        CouchSaveResponse response = restClient.put()
-                .uri("/{db}/{id}", DB_NAME, order.getId())
-                .body(order)
-                .retrieve()
-                .body(CouchSaveResponse.class);
+    public DaoResponse updateOrder(Order order) throws Exception {
+        Order oldOrder = getOrderById(order.getId());
+        if (oldOrder == null) {
+            return new DaoResponse(false, "заказ с id=" + order.getId() + "не найден");
+        }
 
-        return response != null;
+        order.setRev(oldOrder.getRev());
+
+        try {
+            CouchSaveResponse response = restClient.put()
+                    .uri("/{db}/{id}", DB_NAME, order.getId())
+                    .body(order)
+                    .retrieve()
+                    .body(CouchSaveResponse.class);
+
+            if (response == null) {
+                return new DaoResponse(false, "не удалось изменить статус заказа");
+            }
+            return new DaoResponse(true, "успешно");
+        } catch (HttpClientErrorException.Conflict ex) {
+            return new DaoResponse(false, "конфликт ревизий при обновлении заказа с id=" + order.getId());
+        } catch (HttpClientErrorException ex) {
+            return new DaoResponse(false, "ошибка базы данных (" + ex.getStatusCode().value() + ") при обновлении заказа");
+        }
     }
 
     public List<Order> getOrders(Status status, int limit, int skip) {

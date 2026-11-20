@@ -9,12 +9,14 @@ public class ProductDto {
     private String name;
     private String description;
     private int price;
+    private List<String> tags;
 
-    public ProductDto(String id, String name, String description, int price) {
+    public ProductDto(String id, String name, String description, int price, List<String> tags) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
+        this.tags = tags;
     }
 
     public ProductDto() {}
@@ -49,5 +51,13 @@ public class ProductDto {
 
     public void setPrice(int price) {
         this.price = price;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
 }

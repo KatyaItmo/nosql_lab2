@@ -25,7 +25,7 @@ public class CartService {
             String productId = entry.getKey();
             CartItem item = entry.getValue();
             Product cartProduct = item.getProduct();
-            Product dbProduct = productDao.findById(productId);
+            Product dbProduct = productDao.getProductById(productId);
 
             if (dbProduct != null) {
                 if (!cartProduct.equals(dbProduct)) {
